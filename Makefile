@@ -21,6 +21,7 @@ day:
 		touch inputs/test/day${DAY}/1/result_p1.txt ; \
 		codium inputs/test/day${DAY}/1/input.txt ; \
 		codium inputs/test/day${DAY}/1/result_p1.txt ; \
+		codium inputs/test/day${DAY}/1/result_p2.txt ; \
 		codium day${DAY}/day${DAY}.go ; \
 	fi
 
