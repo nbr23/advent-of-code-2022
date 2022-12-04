@@ -58,6 +58,11 @@ func GetInput(day int, token string) string {
 	return strings.Trim(string(data), "\n")
 }
 
+func InputToStrList(input string) []string {
+	input = strings.Trim(input, "\n")
+	return strings.Split(input, "\n")
+}
+
 func StrListToIntList(input []string) []int64 {
 	intlist := make([]int64, 0, len(input))
 	for _, s := range input {
