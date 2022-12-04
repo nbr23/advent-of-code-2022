@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 
 	// "github.com/nbr23/advent-of-code-2022/utils/inputs"
@@ -23,6 +24,7 @@ func RunTestforPart(t *testing.T, part1 utils.Resolver, part2 utils.Resolver, pa
 				continue
 			}
 			bresult, err := os.ReadFile(fmt.Sprintf("../inputs/test/day%02d/%s/result_p%d.txt", day, item.Name(), part))
+			sresult := strings.Trim(string(bresult), "\n")
 			if err != nil {
 				t.Logf("Test result not found %s\n", fmt.Sprintf("../inputs/test/day%02d/%s/result_p%d.txt: skipping…", day, item.Name(), part))
 				continue
@@ -32,8 +34,8 @@ func RunTestforPart(t *testing.T, part1 utils.Resolver, part2 utils.Resolver, pa
 			} else {
 				result = fmt.Sprintf("%v", part2(string(binput)))
 			}
-			t.Logf("Found %s, expected %s\n", result, string(bresult))
-			if result != string(bresult) {
+			t.Logf("Found '%s', expected '%s'\n", result, sresult)
+			if result != sresult {
 				t.Fail()
 			}
 		}
