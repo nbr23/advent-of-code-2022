@@ -75,3 +75,17 @@ func StrListToIntList(input []string) []int64 {
 func InputToIntList(input string) []int64 {
 	return StrListToIntList(strings.Split(input, "\n"))
 }
+
+func InputToIntMatrice(input string) [][]int {
+	input = strings.Trim(input, "\n")
+	split := strings.Split(input, "\n")
+	matrice := make([][]int, len(split))
+	for i, s := range split {
+		row := make([]int, len(s))
+		for j, c := range s {
+			row[j] = int(c - '0')
+		}
+		matrice[i] = row
+	}
+	return matrice
+}

@@ -3,8 +3,6 @@ package main
 import (
 	// "github.com/nbr23/advent-of-code-2022/utils/inputs"
 
-	"fmt"
-
 	"github.com/nbr23/advent-of-code-2022/utils/inputs"
 	"github.com/nbr23/advent-of-code-2022/utils/utils"
 	//	"github.com/pkg/profile"
@@ -20,8 +18,6 @@ func part1(input string) interface{} {
 	trees := inputs.InputToIntMatrice(input)
 	visible := 2*(len(trees)+len(trees[0])) - 4
 	visimap := make(map[Point]bool)
-
-	fmt.Printf("Visible from the edges: %v\n", visible)
 
 	maxleft := make([]int, len(trees))
 	maxright := make([]int, len(trees))
@@ -65,8 +61,53 @@ func part1(input string) interface{} {
 	return visible + len(visimap)
 }
 
+func scenicScore(trees [][]int, x, y int) int {
+	self := trees[y][x]
+	upscore, downscore, leftscore, rightscore := 0, 0, 0, 0
+
+	// up
+	for _y := y - 1; _y >= 0; _y-- {
+		upscore++
+		if trees[_y][x] >= self {
+			break
+		}
+	}
+	// down
+	for _y := y + 1; _y < len(trees); _y++ {
+		downscore++
+		if trees[_y][x] >= self {
+			break
+		}
+	}
+	// left
+	for _x := x + 1; _x < len(trees[0]); _x++ {
+		leftscore++
+		if trees[y][_x] >= self {
+			break
+		}
+	}
+	// right
+	for _x := x - 1; _x >= 0; _x-- {
+		rightscore++
+		if trees[y][_x] >= self {
+			break
+		}
+	}
+	return upscore * downscore * leftscore * rightscore
+}
+
 func part2(input string) interface{} {
-	return nil
+	trees := inputs.InputToIntMatrice(input)
+	score := 0
+	for y := len(trees) - 2; y > 0; y-- {
+		for x := len(trees[0]) - 2; x > 0; x-- {
+			s := scenicScore(trees, x, y)
+			if s > score {
+				score = s
+			}
+		}
+	}
+	return score
 }
 
 func main() {
