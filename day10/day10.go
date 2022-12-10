@@ -3,6 +3,7 @@ package main
 import (
 	// "github.com/nbr23/advent-of-code-2022/utils/inputs"
 
+	"fmt"
 	"strings"
 
 	"github.com/nbr23/advent-of-code-2022/utils/inputs"
@@ -12,6 +13,14 @@ import (
 
 var day_num int = 10
 
+func draw(cycle, x int) rune {
+	cycle = (cycle - 1) % 40
+	if cycle >= x-1 && cycle <= x+1 {
+		return '#'
+	}
+	return '.'
+}
+
 func part1(input string) interface{} {
 	X := 1
 	res := 0
@@ -19,6 +28,7 @@ func part1(input string) interface{} {
 	instructions := inputs.InputToStrList(input)
 	cycle := 1
 	for i := 0; i < len(instructions); {
+		fmt.Printf("%c", draw(cycle, X))
 		line := instructions[i]
 		if line != "noop" {
 			if waitcycle {
@@ -35,7 +45,11 @@ func part1(input string) interface{} {
 		if cycle == 20 || (cycle > 40 && cycle%40 == 20) {
 			res += cycle * X
 		}
+		if (cycle-1)%40 == 0 {
+			fmt.Println()
+		}
 	}
+	fmt.Println()
 	return res
 }
 
