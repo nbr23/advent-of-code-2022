@@ -3,7 +3,6 @@ package main
 import (
 	// "github.com/nbr23/advent-of-code-2022/utils/inputs"
 
-	"fmt"
 	"sort"
 	"strings"
 
@@ -77,24 +76,15 @@ func part1(input string) interface{} {
 		}
 	}
 
-	fmt.Println(len(monkeys))
-
 	for round := 0; round < 20; round++ {
-		// fmt.Printf("Round %d\n", round)
 		for i := range monkeys {
-			// fmt.Printf("Working with Monkey %d\n", i)
 			monkeyItems := monkeys[i].itemscount
 			for j := 0; j < monkeyItems; j++ {
-				// fmt.Printf("Monkey %d inspects %d\n", i, curr.Value)
 				monkeys[i].inspectedCount++
 
-				// operation
 				monkeys[i].itemslist[j] = monkeys[i].operation(monkeys[i].itemslist[j])
-				// fmt.Printf("\tWorry Level now %d\n", curr.Value)
 				monkeys[i].itemslist[j] = monkeys[i].itemslist[j] / 3
-				// fmt.Printf("\tMonkey bored Level now %d\n", curr.Value)
 				throwto := monkeys[i].throwTo(monkeys[i].itemslist[j])
-				// fmt.Printf("\tMonkey throws item %d to %d\n", curr.Value, throwto)
 				monkeys[throwto].itemslist[monkeys[throwto].itemscount] = monkeys[i].itemslist[j]
 				monkeys[i].itemscount--
 				monkeys[throwto].itemscount++
@@ -140,37 +130,23 @@ func part2(input string) interface{} {
 		}
 	}
 
-	fmt.Println(len(monkeys))
-
 	for round := 0; round < 10000; round++ {
-		// fmt.Printf("Round %d\n", round)
 		for i := range monkeys {
-			// fmt.Printf("Working with Monkey %d\n", i)
 			monkeyItems := monkeys[i].itemscount
 			for j := 0; j < monkeyItems; j++ {
-				// fmt.Printf("Monkey %d inspects %d\n", i, curr.Value)
 				monkeys[i].inspectedCount++
 
-				// operation
 				monkeys[i].itemslist[j] = monkeys[i].operation(monkeys[i].itemslist[j])
-				// fmt.Printf("\tWorry Level now %d\n", curr.Value)
 				if monkeys[i].itemslist[j] > divisors {
 					monkeys[i].itemslist[j] = monkeys[i].itemslist[j] % divisors
 				}
-				// fmt.Printf("\tMonkey bored Level now %d\n", curr.Value)
 				throwto := monkeys[i].throwTo(monkeys[i].itemslist[j])
-				// fmt.Printf("\tMonkey throws item %d to %d\n", curr.Value, throwto)
 				monkeys[throwto].itemslist[monkeys[throwto].itemscount] = monkeys[i].itemslist[j]
 				monkeys[i].itemscount--
 				monkeys[throwto].itemscount++
 			}
 		}
 	}
-
-	for i := range monkeys {
-		fmt.Printf("Monkey %d: %v\n", i, monkeys[i].inspectedCount)
-	}
-
 	return monkeyBusiness(monkeys)
 }
 
