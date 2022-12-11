@@ -63,17 +63,38 @@ func InputToStrList(input string) []string {
 	return strings.Split(input, "\n")
 }
 
-func StrListToIntList(input []string) []int64 {
+func StrListToInt64List(input []string) []int64 {
 	intlist := make([]int64, 0, len(input))
 	for _, s := range input {
-		i, _ := strconv.ParseInt(s, 10, 64)
+		i, _ := strconv.ParseInt(strings.Trim(s, " "), 10, 64)
 		intlist = append(intlist, i)
 	}
 	return intlist
 }
 
-func InputToIntList(input string) []int64 {
+func StrListToUInt64List(input []string) []uint64 {
+	intlist := make([]uint64, 0, len(input))
+	for _, s := range input {
+		i, _ := strconv.ParseInt(strings.Trim(s, " "), 10, 64)
+		intlist = append(intlist, uint64(i))
+	}
+	return intlist
+}
+
+func StrListToIntList(input []string) []int {
+	intlist := make([]int, 0, len(input))
+	for _, s := range input {
+		i, _ := strconv.ParseInt(strings.Trim(s, " "), 10, 64)
+		intlist = append(intlist, int(i))
+	}
+	return intlist
+}
+
+func InputToIntList(input string) []int {
 	return StrListToIntList(strings.Split(input, "\n"))
+}
+func InputToInt64List(input string) []int64 {
+	return StrListToInt64List(strings.Split(input, "\n"))
 }
 
 func InputToIntMatrice(input string) [][]int {
