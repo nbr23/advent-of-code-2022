@@ -19,9 +19,9 @@ day:
 		mkdir -p inputs/test/day${DAY}/1 ;\
 		touch inputs/test/day${DAY}/1/input.txt ; \
 		touch inputs/test/day${DAY}/1/result_p1.txt ; \
-		codium inputs/test/day${DAY}/1/input.txt ; \
-		inputs/test/day${DAY}/1/result_p1.txt ; \
-		inputs/test/day${DAY}/1/result_p2.txt ; \
+		codium inputs/test/day${DAY}/1/input.txt \
+		inputs/test/day${DAY}/1/result_p1.txt \
+		inputs/test/day${DAY}/1/result_p2.txt \
 		day${DAY}/day${DAY}.go ; \
 	fi
 
