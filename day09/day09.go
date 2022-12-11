@@ -17,17 +17,12 @@ type Point struct {
 }
 
 func getVector(dir string) Point {
-	switch dir {
-	case "U":
-		return Point{0, 1}
-	case "D":
-		return Point{0, -1}
-	case "L":
-		return Point{-1, 0}
-	case "R":
-		return Point{1, 0}
-	}
-	panic("Unsupported move")
+	return map[string]Point{
+		"U": {0, 1},
+		"D": {0, -1},
+		"L": {-1, 0},
+		"R": {1, 0},
+	}[dir]
 }
 
 func abs(i int) int {
