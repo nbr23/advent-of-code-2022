@@ -40,7 +40,7 @@ func getOperation(s string) func(x int) int {
 	}
 }
 
-func getThrower(ss []string) func(x int) int {
+func getThrower(ss []string) (func(x int) int, int) {
 	divop, throwop1, throwop2 := strings.Split(ss[0], " "), strings.Split(ss[1], " "), strings.Split(ss[2], " ")
 	divisor := inputs.ParseDecInt(divop[len(divop)-1])
 	throw1 := inputs.ParseDecInt(throwop1[len(throwop1)-1])
@@ -50,7 +50,7 @@ func getThrower(ss []string) func(x int) int {
 			return throw1
 		}
 		return throw2
-	}
+	}, divisor
 }
 
 func part1(input string) interface{} {
@@ -61,16 +61,18 @@ func part1(input string) interface{} {
 
 		startingItems := inputs.StrListToIntList(strings.Split(strings.Join(strings.Split(monkeyDef[1], " ")[4:], " "), ","))
 
-		itemsList := make([]int, 1024)
+		itemsList := make([]int, 32)
 		for i := range startingItems {
 			itemsList[i] = startingItems[i]
 		}
+
+		thrower, _ := getThrower(monkeyDef[3:])
 
 		monkeys[i] = Monkey{
 			itemsList,
 			len(startingItems),
 			getOperation(monkeyDef[2]),
-			getThrower(monkeyDef[3:]),
+			thrower,
 			0,
 		}
 	}
@@ -113,7 +115,63 @@ func monkeyBusiness(monkeys []Monkey) int {
 }
 
 func part2(input string) interface{} {
-	return nil
+	divisors := 1
+	monkeyDefinitions := strings.Split(input, "\n\n")
+	monkeys := make([]Monkey, len(monkeyDefinitions))
+	for i := range monkeyDefinitions {
+		monkeyDef := strings.Split(monkeyDefinitions[i], "\n")
+
+		startingItems := inputs.StrListToIntList(strings.Split(strings.Join(strings.Split(monkeyDef[1], " ")[4:], " "), ","))
+
+		itemsList := make([]int, 32)
+		for i := range startingItems {
+			itemsList[i] = startingItems[i]
+		}
+
+		thrower, divisor := getThrower(monkeyDef[3:])
+		divisors *= divisor
+
+		monkeys[i] = Monkey{
+			itemsList,
+			len(startingItems),
+			getOperation(monkeyDef[2]),
+			thrower,
+			0,
+		}
+	}
+
+	fmt.Println(len(monkeys))
+
+	for round := 0; round < 10000; round++ {
+		// fmt.Printf("Round %d\n", round)
+		for i := range monkeys {
+			// fmt.Printf("Working with Monkey %d\n", i)
+			monkeyItems := monkeys[i].itemscount
+			for j := 0; j < monkeyItems; j++ {
+				// fmt.Printf("Monkey %d inspects %d\n", i, curr.Value)
+				monkeys[i].inspectedCount++
+
+				// operation
+				monkeys[i].itemslist[j] = monkeys[i].operation(monkeys[i].itemslist[j])
+				// fmt.Printf("\tWorry Level now %d\n", curr.Value)
+				if monkeys[i].itemslist[j] > divisors {
+					monkeys[i].itemslist[j] = monkeys[i].itemslist[j] % divisors
+				}
+				// fmt.Printf("\tMonkey bored Level now %d\n", curr.Value)
+				throwto := monkeys[i].throwTo(monkeys[i].itemslist[j])
+				// fmt.Printf("\tMonkey throws item %d to %d\n", curr.Value, throwto)
+				monkeys[throwto].itemslist[monkeys[throwto].itemscount] = monkeys[i].itemslist[j]
+				monkeys[i].itemscount--
+				monkeys[throwto].itemscount++
+			}
+		}
+	}
+
+	for i := range monkeys {
+		fmt.Printf("Monkey %d: %v\n", i, monkeys[i].inspectedCount)
+	}
+
+	return monkeyBusiness(monkeys)
 }
 
 func main() {
