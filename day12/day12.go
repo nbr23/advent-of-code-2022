@@ -2,6 +2,8 @@ package main
 
 import (
 	// "github.com/nbr23/advent-of-code-2022/utils/inputs"
+
+	"math"
 	"strings"
 
 	"github.com/nbr23/advent-of-code-2022/utils/utils"
@@ -79,8 +81,44 @@ func part1(input string) interface{} {
 	return costs[End]
 }
 
+func computeCostsp2(matrice map[Point]int, costs map[Point]int, cursor Point, cost int) {
+	height := matrice[cursor]
+
+	for _, p := range LOOKAROUND {
+		newcursor := Point{cursor.x + p.x, cursor.y + p.y}
+		if h, ok := matrice[newcursor]; ok {
+			// valid point
+			if height <= h+1 {
+				// check if already have a cost for it
+				if ecost, ok := costs[newcursor]; ok {
+					if cost+1 < ecost {
+						costs[newcursor] = cost + 1
+						computeCostsp2(matrice, costs, newcursor, cost+1)
+					}
+				} else {
+					costs[newcursor] = cost + 1
+					computeCostsp2(matrice, costs, newcursor, cost+1)
+				}
+			}
+		}
+	}
+}
+
+func findNearestA(matrice, costs map[Point]int) int {
+	cost := math.MaxInt
+	for p, v := range matrice {
+		if v == 0 && costs[p] < cost && costs[p] != 0 {
+			cost = costs[p]
+		}
+	}
+	return cost
+}
+
 func part2(input string) interface{} {
-	return nil
+	costs := make(map[Point]int)
+	matrice, _, End := loadInput(input)
+	computeCostsp2(matrice, costs, End, 0)
+	return findNearestA(matrice, costs)
 }
 
 func main() {
