@@ -12,52 +12,16 @@ import (
 
 var day_num int = 13
 
-//[[1],[2,3,4]]
-
 type Item struct {
 	IsList  bool
 	IntVal  int64
 	ListVal []*Item
 }
 
-// func splitPacket(input string) []string {
-// 	if len(input) == 0 {
-// 		return []string{}
-// 	}
-
-// 	elements := make([]string, 1)
-// 	// index := 0
-// 	// elements[index] = ""
-// 	current := ""
-// 	level := -1
-// 	for _, c := range input {
-// 		if c == '[' {
-// 			level++
-// 			continue
-// 		} else if c == ']' {
-// 			level--
-// 			continue
-// 		}
-// 		// if level > 0 {
-// 		// 	continue
-// 		// }
-// 		if c == ',' && level == 0 {
-// 			index++
-// 			elements = append(elements, "")
-// 		} else {
-// 			elements[index] = fmt.Sprintf("%s%c", elements[index], c)
-// 		}
-// 	}
-// 	return elements
-// }
-
 func (i Item) String() string {
 	if !i.IsList {
 		return fmt.Sprintf("%d", i.IntVal)
 	}
-	// if len(i.ListVal) == 0 {
-	// 	return "[]"
-	// }
 	s := "["
 	for _, v := range i.ListVal {
 		s = fmt.Sprintf("%s%s,", s, v.String())
@@ -70,12 +34,10 @@ func splitPacket(input string) *Item {
 	if len(input) == 0 {
 		return nil
 	}
-	// check si on est sur un chiffre
 	if i, err := strconv.ParseInt(strings.Trim(input, " "), 10, 64); err == nil {
 		return &Item{false, i, nil}
 	}
 
-	// Remove brackets
 	input = input[1 : len(input)-1]
 	item := Item{true, 0, []*Item{}}
 
@@ -92,7 +54,6 @@ func splitPacket(input string) *Item {
 			continue
 		}
 		if c == ',' && level == 0 {
-			// we are done separating this subelement, passe it on to the splitter and append the result to the current item
 			item.ListVal = append(item.ListVal, splitPacket(current))
 			current = ""
 		} else {
@@ -164,8 +125,77 @@ func part1(input string) interface{} {
 	return res
 }
 
+type LinkedList struct {
+	Next  *LinkedList
+	Value *Item
+}
+
+func Append(l *LinkedList, v *Item, acc int) (*LinkedList, int) {
+	if l == nil {
+		return &LinkedList{nil, v}, acc
+	}
+
+	if l.Next == nil {
+		if compare(l.Value, v) < 1 {
+			newl := &LinkedList{l, v}
+			return newl, acc + 1
+		}
+		l.Next = &LinkedList{nil, v}
+		return l, acc + 1
+	}
+
+	curr := l
+	for {
+		if curr.Next == nil {
+			curr.Next = &LinkedList{nil, v}
+			break
+		}
+		if compare(curr.Next.Value, v) < 1 {
+			newl := &LinkedList{curr.Next, v}
+			curr.Next = newl
+			return l, acc + 1
+		}
+		curr = curr.Next
+		acc++
+	}
+	return l, acc + 1
+}
+
+func (l *LinkedList) String() string {
+	if l == nil {
+		return "nil"
+	}
+	v := ""
+	curr := l
+	for {
+		if curr.Value == nil {
+			v = fmt.Sprintf("%s[] ", v)
+		} else {
+			v = fmt.Sprintf("%s%v\n", v, curr.Value)
+		}
+		if curr.Next == nil {
+			break
+		}
+		curr = curr.Next
+	}
+
+	return fmt.Sprintf("%s\n", v)
+}
+
 func part2(input string) interface{} {
-	return nil
+	pairs := strings.Split(input, "\n\n")
+	var ll *LinkedList
+
+	for _, pair := range pairs {
+		packets := strings.Split(pair, "\n")
+		p1 := splitPacket(packets[0])
+		p2 := splitPacket(packets[1])
+		ll, _ = Append(ll, p1, 0)
+		ll, _ = Append(ll, p2, 0)
+	}
+	ll, a := Append(ll, splitPacket("[[2]]"), 0)
+	ll, b := Append(ll, splitPacket("[[6]]"), 0)
+	return (a + 1) * (b + 1)
 }
 
 func main() {
