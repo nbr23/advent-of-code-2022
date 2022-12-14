@@ -17,11 +17,7 @@ type Point struct {
 	Y int
 }
 
-var ROCK = 1
-var EMPTY = 0
-var SAND = 2
-
-func parseRockPattern(input string, rockmap map[Point]int) int {
+func parseRockPattern(input string, rockmap map[Point]bool) int {
 	var prev *Point
 	var maxy int
 	for _, rock_s := range strings.Split(input, " -> ") {
@@ -37,23 +33,23 @@ func parseRockPattern(input string, rockmap map[Point]int) int {
 			continue
 		}
 		for x := prev.X; x <= rock.X; x++ {
-			rockmap[Point{x, rock.Y}] = ROCK
+			rockmap[Point{x, rock.Y}] = true
 		}
 		for x := rock.X; x <= prev.X; x++ {
-			rockmap[Point{x, rock.Y}] = ROCK
+			rockmap[Point{x, rock.Y}] = true
 		}
 		for y := prev.Y; y <= rock.Y; y++ {
-			rockmap[Point{rock.X, y}] = ROCK
+			rockmap[Point{rock.X, y}] = true
 		}
 		for y := rock.Y; y <= prev.Y; y++ {
-			rockmap[Point{rock.X, y}] = ROCK
+			rockmap[Point{rock.X, y}] = true
 		}
 		prev = &rock
 	}
 	return maxy
 }
 
-func addSand(rockmap map[Point]int, floor int) bool {
+func addSand(rockmap map[Point]bool, floor int) bool {
 	sand := Point{500, 0}
 	for {
 		if sand.Y >= floor {
@@ -69,14 +65,14 @@ func addSand(rockmap map[Point]int, floor int) bool {
 			sand.X++
 		} else {
 			// The end
-			rockmap[sand] = SAND
+			rockmap[sand] = true
 			return true
 		}
 	}
 }
 
 func part1(input string) interface{} {
-	rockmap := make(map[Point]int)
+	rockmap := make(map[Point]bool)
 	var maxy int
 	var res int
 	for _, line := range inputs.InputToStrList(input) {
@@ -88,8 +84,41 @@ func part1(input string) interface{} {
 	return res
 }
 
+func addSand2(rockmap map[Point]bool, floor int) bool {
+	sand := Point{500, 0}
+	for {
+		if sand.Y+1 == floor+2 {
+			rockmap[sand] = true
+			return true
+		} else if _, ok := rockmap[Point{sand.X, sand.Y + 1}]; !ok {
+			sand.Y++
+		} else if _, ok := rockmap[Point{sand.X - 1, sand.Y + 1}]; !ok {
+			sand.Y++
+			sand.X--
+		} else if _, ok := rockmap[Point{sand.X + 1, sand.Y + 1}]; !ok {
+			sand.Y++
+			sand.X++
+		} else {
+			if sand.Y == 0 {
+				return false
+			}
+			rockmap[sand] = true
+			return true
+		}
+	}
+}
+
 func part2(input string) interface{} {
-	return nil
+	rockmap := make(map[Point]bool)
+	var maxy int
+	var res int
+	for _, line := range inputs.InputToStrList(input) {
+		maxy = parseRockPattern(line, rockmap)
+	}
+	for addSand2(rockmap, maxy) {
+		res++
+	}
+	return res + 1
 }
 
 func main() {
