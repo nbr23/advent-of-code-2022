@@ -22,6 +22,13 @@ func IntMax(a int, b int) int {
 	return b
 }
 
+func IntAbs(a int) int {
+	if a < 0 {
+		return a * -1
+	}
+	return a
+}
+
 type Resolver func(string) interface{}
 
 func Solve(part1 Resolver, part2 Resolver, day int) {

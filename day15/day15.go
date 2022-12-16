@@ -3,6 +3,7 @@ package main
 import (
 	// "github.com/nbr23/advent-of-code-2022/utils/inputs"
 
+	"fmt"
 	"strings"
 
 	"github.com/nbr23/advent-of-code-2022/utils/inputs"
@@ -11,8 +12,6 @@ import (
 )
 
 var day_num int = 15
-
-//Sensor at x=2, y=18: closest beacon is at x=-2, y=15
 
 type Point struct {
 	x, y int
@@ -47,6 +46,7 @@ func parseBeacons(input string) Map {
 
 		beaconsMap.sensors[p1] = distance
 		beaconsMap.beacons[p2] = true
+		drawCircle(p1, distance)
 	}
 	return beaconsMap
 }
@@ -57,7 +57,7 @@ func manhattanDist(p1, p2 Point) int {
 
 func part1(input string) interface{} {
 	Y := 2000000
-	beaconsMap := parseBeacons(input)
+	beaconsMap = parseBeacons(input)
 	score := 0
 	scan := Point{beaconsMap.minX, Y}
 
@@ -78,8 +78,93 @@ func part1(input string) interface{} {
 	return score
 }
 
+var fullMap = make(map[Point]bool)
+
+var ranges = make([][]*Point, MAX*2)
+
+func (pts *Point) String() string {
+	return fmt.Sprintf("%v", *pts)
+}
+
+func addRange(y, min, max int) {
+	if ranges[y] == nil {
+		ranges[y] = []*Point{{min, max}}
+		return
+	}
+
+	done := false
+	for _, p := range ranges[y] {
+		if min <= p.y && min >= p.x {
+			p.y = utils.IntMax(max, p.y)
+			done = true
+		}
+		if max <= p.y && max >= p.y {
+			p.x = utils.IntMin(p.x, min)
+			done = true
+		}
+		if done {
+			return
+		}
+	}
+	ranges[y] = append(ranges[y], &Point{min, max})
+}
+
+func drawCircle(p Point, d int) {
+	for h := 0; h <= d; h++ {
+		if p.y+d-h >= 0 {
+			addRange(p.y+d-h, p.x-h, p.x+h)
+		}
+		if p.y-d+h >= 0 {
+			addRange(p.y-d+h, p.x-h, p.x+h)
+		}
+	}
+}
+
+var beaconsMap Map
+var MAX = 4000000
+
+func printMap() {
+	for y := 0; y <= MAX; y++ {
+		for x := 0; x <= MAX; x++ {
+			found := false
+			for _, r := range ranges[y] {
+				if x <= r.y && x >= r.x {
+					found = true
+				}
+			}
+			if found {
+				fmt.Print("#")
+			} else {
+				fmt.Print(".")
+			}
+		}
+		fmt.Println()
+	}
+}
+
+func findEmpty() int {
+	score := 0
+	for y := 0; y <= MAX; y++ {
+		for x := 0; x <= MAX; {
+			found := false
+			for _, r := range ranges[y] {
+				if x <= r.y && x >= r.x {
+					found = true
+					x = r.y
+					break
+				}
+			}
+			if !found {
+				score = x*4000000 + y
+			}
+			x++
+		}
+	}
+	return score
+}
+
 func part2(input string) interface{} {
-	return nil
+	return findEmpty()
 }
 
 func main() {
