@@ -1,124 +1,70 @@
 package linkedlist
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/nbr23/advent-of-code-2022/utils/inputs"
+)
+
+type Node[T any] struct {
+	Value T
+	Next  *Node[T]
+}
+
+func (n Node[T]) String() string {
+	return fmt.Sprintf("%v", n.Value)
+}
 
 type LinkedList[T any] struct {
-	Previous *LinkedList[T]
-	Next     *LinkedList[T]
-	Value    T
+	Head *Node[T]
+	Tail *Node[T]
 }
 
-// (newlist, element)
-func Append[T any](l *LinkedList[T], v T) (*LinkedList[T], *LinkedList[T]) {
-	var newelt *LinkedList[T]
-	if l == nil {
-		newelt = &LinkedList[T]{nil, nil, v}
-		return newelt, newelt
-	}
-	curr := l
+func (l *LinkedList[T]) SetHeadToZero() {
 	for {
-		if curr.Next == nil {
-			curr.Next = &LinkedList[T]{curr, nil, v}
-			newelt = curr.Next
-			break
-		}
-		curr = curr.Next
-	}
-	return l, newelt
-}
-
-func PopLast[T any](l *LinkedList[T]) (*LinkedList[T], T) {
-	var v T
-	curr := l
-	prev := l
-	if curr.Next == nil {
-		return nil, curr.Value
-	}
-	for {
-		if curr.Next == nil {
-			prev.Next = nil
-			v = curr.Value
-			break
-		}
-		prev = curr
-		curr = curr.Next
-	}
-	return l, v
-}
-
-func ToLinkedList[T any](l []T) (*LinkedList[T], []*LinkedList[T]) {
-	var ll *LinkedList[T]
-	var newelt *LinkedList[T]
-	nodes := make([]*LinkedList[T], len(l))
-	if len(l) == 0 {
-		return nil, nodes
-	}
-	for i := range l {
-		ll, newelt = Append(ll, l[i])
-		nodes[i] = newelt
-	}
-	return ll, nodes
-}
-
-func MakeCircular[T any](l *LinkedList[T]) {
-	if l == nil {
-		return
-	}
-	first := l
-	for {
-		if l.Next == nil {
-			l.Next = first
-			first.Previous = l
+		if inputs.ParseDecInt(fmt.Sprint(l.Head.Value)) == 0 { // lol lol
 			return
 		}
-		l = l.Next
+		l.Head = l.Head.Next
+	}
+}
+
+func (l *LinkedList[T]) Append(v T) {
+	if l.Tail == nil && l.Head == nil {
+		l.Tail = &Node[T]{v, l.Head}
+		l.Head = l.Tail
+	} else {
+		l.Tail.Next = &Node[T]{v, l.Head}
+		l.Tail = l.Tail.Next
 	}
 }
 
 func (l *LinkedList[T]) ToList() []T {
-	resList := make([]T, 0)
-	if l == nil {
-		return resList
+	if l.Head == nil && l.Tail == nil {
+		return []T{}
 	}
-	curr := l
-	looped := false
+	curr := l.Head
+	res := make([]T, 0)
 	for {
-		if curr == l {
-			if looped {
-				break
-			}
-			looped = true
-		}
-		resList = append(resList, curr.Value)
-		if curr.Next == nil {
+		res = append(res, curr.Value)
+		curr = curr.Next
+		if curr == l.Head {
 			break
 		}
-		curr = curr.Next
 	}
-
-	return resList
+	return res
 }
 
-func (l *LinkedList[T]) String() string {
-	if l == nil {
-		return "nil"
-	}
-	v := "[ "
-	curr := l
-	looped := false
-	for {
-		if curr == l {
-			if looped {
-				break
-			}
-			looped = true
-		}
-		v = fmt.Sprintf("%s%v ", v, curr.Value)
-		if curr.Next == nil {
-			break
-		}
-		curr = curr.Next
-	}
+func ToLinkedList[T any](l []T) (*LinkedList[T], []*Node[T]) {
+	ll := &LinkedList[T]{}
+	nodes := make([]*Node[T], len(l))
 
-	return fmt.Sprintf("%s]", v)
+	if len(l) == 0 {
+		return nil, nodes
+	}
+	for i, e := range l {
+		ll.Append(e)
+		nodes[i] = ll.Tail
+	}
+	return ll, nodes
 }

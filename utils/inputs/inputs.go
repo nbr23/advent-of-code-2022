@@ -91,10 +91,10 @@ func StrListToIntList(input []string) []int {
 }
 
 func InputToIntList(input string) []int {
-	return StrListToIntList(strings.Split(input, "\n"))
+	return StrListToIntList(strings.Split(strings.Trim(input, "\n"), "\n"))
 }
 func InputToInt64List(input string) []int64 {
-	return StrListToInt64List(strings.Split(input, "\n"))
+	return StrListToInt64List(strings.Split(strings.Trim(input, "\n"), "\n"))
 }
 
 func InputToIntMatrice(input string) [][]int {
