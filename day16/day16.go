@@ -13,69 +13,87 @@ import (
 var day_num int = 16
 
 type Valve struct {
-	id          string
+	id          int
 	flowrate    int
-	open        bool
-	leadsTo     []string
+	leadsTo     []int
 	leadsToWent []bool
 }
 
+func valveID(name string) int {
+	return (int(name[0])-int('A'))*100 + int(name[1]) - int('A')
+}
+
+func IDtoValve(v int) string {
+	return fmt.Sprintf("%c%c", rune((v/100)+'A'), rune(v%100+'A'))
+}
+
+func IDstoValves(valves []int) []string {
+	res := make([]string, len(valves))
+	for i, v := range valves {
+		res[i] = IDtoValve(v)
+	}
+	return res
+}
+
 func (v Valve) String() string {
-	return fmt.Sprintf("{Rate=%d open=%v leadsTo=%s}", v.flowrate, v.open, v.leadsTo)
+	return fmt.Sprintf("{Rate=%d leadsTo=%v}", v.flowrate, v.leadsTo)
 }
 
 // Valve DF has flow rate=0; tunnels lead to valves ON, IC
-func parseValves(input string) map[string]*Valve {
-	valves := make(map[string]*Valve)
+func parseValves(input string) map[int]*Valve {
+	valves := make(map[int]*Valve)
 	for _, line := range inputs.InputToStrList(input) {
 		parts := strings.Split(line, " ")
 
 		valvespart := strings.Split(line, "valves ")
-		var leadsTo []string
+		var leadsTo = make([]int, 0)
 		if len(valvespart) > 1 {
-			leadsTo = strings.Split(strings.Split(line, "valves ")[1], ", ")
+			for _, lt := range strings.Split(strings.Split(line, "valves ")[1], ", ") {
+				leadsTo = append(leadsTo, valveID(lt))
+			}
 		} else {
-			leadsTo = []string{strings.Split(line, "valve ")[1]}
+			leadsTo = []int{valveID(strings.Split(line, "valve ")[1])}
 		}
 		v := Valve{
-			parts[1],
+			valveID(parts[1]),
 			inputs.ParseDecInt(strings.Trim(strings.Split(parts[4], "=")[1], ";")),
-			false,
 			leadsTo,
 			make([]bool, len(leadsTo)),
 		}
 
-		valves[parts[1]] = &v
+		valves[valveID(parts[1])] = &v
 	}
 	return valves
 }
 
-var Valves map[string]*Valve
+var Valves map[int]*Valve
 
 type Tunnel struct {
-	source string
-	target string
+	source int
+	target int
 }
 
 type tunnelPath struct {
-	source  *tunnelPath
-	current string
-	// targets  []string
+	source   *tunnelPath
+	current  int
 	distance int
 }
 
 type path struct {
-	from string
-	to   string
+	from int
+	to   int
 }
 
-var shortestPaths = make(map[path][]string)
+var shortestPaths = make(map[path]int)
 
-func shortestPath(from, to string) []string {
+func shortestPath(from, to int) int {
 	if v, ok := shortestPaths[path{from, to}]; ok {
 		return v
 	}
-	visited := make(map[string]bool)
+	if v, ok := shortestPaths[path{to, from}]; ok {
+		return v
+	}
+	visited := make(map[int]bool)
 
 	tocheck := []*tunnelPath{{nil, from, 0}}
 	tocheck_next := make([]*tunnelPath, 0)
@@ -115,13 +133,13 @@ func shortestPath(from, to string) []string {
 		}
 	}
 
-	res := make([]string, 0)
+	res := make([]int, 0)
 	for best != nil {
 		res = append(res, best.current)
 		best = best.source
 	}
-	shortestPaths[path{from, to}] = res
-	return res
+	shortestPaths[path{from, to}] = len(res)
+	return len(res)
 }
 
 func getWorthiness(destFlow int, pathlength int, minutesleft int) int {
@@ -130,12 +148,16 @@ func getWorthiness(destFlow int, pathlength int, minutesleft int) int {
 
 type position struct {
 	minutes       int
-	current_valve string
+	current_valve int
 	flowrate      int
-	open_valves   []string
+	open_valves   []int
+}
+type pair struct {
+	s1 int
+	s2 int
 }
 
-func isIn(l []string, s string) bool {
+func isIn(l []int, s int) bool {
 	for _, e := range l {
 		if e == s {
 			return true
@@ -144,14 +166,17 @@ func isIn(l []string, s string) bool {
 	return false
 }
 
-func getZeroValves() []string {
-	res := make([]string, 0)
+func splitZeroValves() ([]int, []int) {
+	zero := make([]int, 0)
+	nonzero := make([]int, 0)
 	for v := range Valves {
 		if Valves[v].flowrate == 0 {
-			res = append(res, v)
+			zero = append(zero, v)
+		} else {
+			nonzero = append(nonzero, v)
 		}
 	}
-	return res
+	return zero, nonzero
 }
 
 func part1(input string) interface{} {
@@ -161,13 +186,12 @@ func part1(input string) interface{} {
 
 	final_positions := make([]position, 0)
 
-	zerovalves := getZeroValves()
-	fmt.Println("zerovalves", zerovalves)
+	zerovalves, nonzerovalves := splitZeroValves()
 
 	active_positions := []position{
 		{
 			30,
-			"AA",
+			valveID("AA"),
 			0,
 			zerovalves,
 		},
@@ -191,7 +215,7 @@ func part1(input string) interface{} {
 			}
 			didsomething := false
 			// otherwise, we look at all the unopened valves
-			for v := range Valves {
+			for _, v := range nonzerovalves {
 				if isIn(ap.open_valves, v) {
 					continue
 				}
@@ -201,20 +225,20 @@ func part1(input string) interface{} {
 				// fmt.Println(p)
 
 				//get the worthiness of this path
-				w := getWorthiness(Valves[v].flowrate, len(p), ap.minutes)
+				w := getWorthiness(Valves[v].flowrate, p, ap.minutes)
 				if w < 0 {
 					continue
 				}
 				didsomething = true
 
-				newopenvalves := make([]string, len(ap.open_valves)+1)
+				newopenvalves := make([]int, len(ap.open_valves)+1)
 
 				copy(newopenvalves, ap.open_valves)
 				newopenvalves[len(ap.open_valves)] = v
 
 				// and we add this to our "new_active_POS" list
 				new_active_pos = append(new_active_pos, position{
-					ap.minutes - len(p),
+					ap.minutes - p,
 					v,
 					ap.flowrate + w,
 					newopenvalves,
@@ -238,7 +262,164 @@ func part1(input string) interface{} {
 }
 
 func part2(input string) interface{} {
-	return nil
+	Valves = parseValves(input)
+
+	final_positions := make([]position, 0)
+
+	zerovalves, nonzerovalves := splitZeroValves()
+
+	active_positions := []position{
+		{
+			26,
+			valveID("AA"),
+			0,
+			zerovalves,
+		},
+	}
+
+	for {
+		// we are done
+		if len(active_positions) == 0 {
+			break
+		}
+
+		new_active_pos := make([]position, 0)
+
+		// iterate over current active positions
+		for _, ap := range active_positions {
+			// no time left, we are done
+			if ap.minutes < 0 {
+				// we add this to final_positions
+				final_positions = append(final_positions, ap)
+				continue
+			}
+			didsomething := false
+			// otherwise, we look at all the unopened valves
+			for _, v := range nonzerovalves {
+				if isIn(ap.open_valves, v) {
+					continue
+				}
+
+				// get the path between current and that one
+				p := shortestPath(ap.current_valve, v)
+				// fmt.Println(p)
+
+				//get the worthiness of this path
+				w := getWorthiness(Valves[v].flowrate, p, ap.minutes)
+				if w < 0 {
+					continue
+				}
+				didsomething = true
+
+				newopenvalves := make([]int, len(ap.open_valves)+1)
+
+				copy(newopenvalves, ap.open_valves)
+				newopenvalves[len(ap.open_valves)] = v
+
+				// and we add this to our "new_active_POS" list
+				new_active_pos = append(new_active_pos, position{
+					ap.minutes - p,
+					v,
+					ap.flowrate + w,
+					newopenvalves,
+				})
+			}
+			if !didsomething {
+				final_positions = append(final_positions, ap)
+			}
+		}
+
+		active_positions = new_active_pos
+	}
+
+	humanpoints := 0
+	var opened []int
+	for _, fp := range final_positions {
+		if fp.flowrate > humanpoints {
+			humanpoints = fp.flowrate
+			opened = make([]int, len(fp.open_valves))
+			copy(opened, fp.open_valves)
+		}
+	}
+	fmt.Println("opened", IDstoValves(opened))
+
+	// starting elephant
+	active_positions = []position{
+		{
+			26,
+			valveID("AA"),
+			0,
+			opened,
+		},
+	}
+	final_positions = make([]position, 0)
+
+	for {
+		// we are done
+		if len(active_positions) == 0 {
+			break
+		}
+
+		new_active_pos := make([]position, 0)
+
+		// iterate over current active positions
+		for _, ap := range active_positions {
+			// no time left, we are done
+			if ap.minutes < 0 {
+				// we add this to final_positions
+				final_positions = append(final_positions, ap)
+				continue
+			}
+			didsomething := false
+			// otherwise, we look at all the unopened valves
+			for _, v := range nonzerovalves {
+				if isIn(ap.open_valves, v) {
+					continue
+				}
+
+				// get the path between current and that one
+				p := shortestPath(ap.current_valve, v)
+				// fmt.Println(p)
+
+				//get the worthiness of this path
+				w := getWorthiness(Valves[v].flowrate, p, ap.minutes)
+				if w < 0 {
+					continue
+				}
+				didsomething = true
+
+				newopenvalves := make([]int, len(ap.open_valves)+1)
+
+				copy(newopenvalves, ap.open_valves)
+				newopenvalves[len(ap.open_valves)] = v
+
+				// and we add this to our "new_active_POS" list
+				new_active_pos = append(new_active_pos, position{
+					ap.minutes - p,
+					v,
+					ap.flowrate + w,
+					newopenvalves,
+				})
+			}
+			if !didsomething {
+				final_positions = append(final_positions, ap)
+			}
+		}
+
+		active_positions = new_active_pos
+	}
+
+	elephantpoints := 0
+	for _, fp := range final_positions {
+		if fp.flowrate > elephantpoints {
+			elephantpoints = fp.flowrate
+			opened = make([]int, len(fp.open_valves))
+			copy(opened, fp.open_valves)
+		}
+	}
+	fmt.Println("opened", IDstoValves(opened))
+
+	return humanpoints + elephantpoints
 }
 
 func main() {
