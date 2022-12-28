@@ -102,20 +102,14 @@ func getBlizzardPosition(bmap *blizzardMap, b *blizzard, minute int) point {
 }
 
 func pathFinder(blizmap *blizzardMap, start, end point, minutes int) int {
-	// start := point{1, 0, 0}
-	// end := point{blizmap.maxx - 2, blizmap.maxy - 1, 0}
-	// current_positions := make([]point, 1)
 	current_positions := mapset.NewSet[point]()
 	current_positions.Add(start)
 	cost := minutes
 
-	// not sure how to know when it's usefull to stay at current position
 	for {
 		new_current_positions := mapset.NewSet[point]()
-		// printMapAt(blizmap, cost)
 		for p := range current_positions.Iter() {
 			for _, m := range MOVES {
-				// check if at costs+1 there will be a blizzard there
 				newpoint := point{p.x + m.x, p.y + m.y, (cost + 1) % ((blizmap.maxx - 2) * (blizmap.maxy - 2))} // fixme or modulo here ?
 
 				if newpoint.x == end.x && newpoint.y == end.y {
@@ -125,7 +119,6 @@ func pathFinder(blizmap *blizzardMap, start, end point, minutes int) int {
 					continue
 				}
 
-				// if there's a blizzard in there, we skip
 				if v, ok := blizmap.bmap[newpoint]; ok || v {
 					continue
 				}
