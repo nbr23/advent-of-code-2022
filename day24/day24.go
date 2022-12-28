@@ -121,7 +121,7 @@ func pathFinder(blizmap *blizzardMap, start, end point, minutes int) int {
 				if newpoint.x == end.x && newpoint.y == end.y {
 					return cost + 1
 				}
-				if !(newpoint.x == 1 && newpoint.y == 0) && (newpoint.x < 1 || newpoint.x >= blizmap.maxx-1 || newpoint.y < 1 || newpoint.y >= blizmap.maxy-1) {
+				if !(newpoint.x == start.x && newpoint.y == start.y) && (newpoint.x < 1 || newpoint.x >= blizmap.maxx-1 || newpoint.y < 1 || newpoint.y >= blizmap.maxy-1) {
 					continue
 				}
 
@@ -149,6 +149,8 @@ func part1(input string) interface{} {
 }
 
 func part2(input string) interface{} {
+	back := pathFinder(bmap, point{bmap.maxx - 2, bmap.maxy - 1, 0}, point{1, 0, 0}, P1)
+	return pathFinder(bmap, point{1, 0, 0}, point{bmap.maxx - 2, bmap.maxy - 1, 0}, back)
 }
 
 func main() {
